@@ -396,6 +396,21 @@
   /* ── BUTTONS ── */
   .btn-row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-bottom: 8px; }
 
+  /* CHIPS TIPO SESSÃO */
+  .chip-sessao {
+    padding: 8px 20px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--dark2);
+    background: var(--white);
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .chip-sessao:hover { border-color: var(--beige); color: var(--beige); cursor: pointer; }
+  .chip-sessao.ativo { background: var(--beige); border-color: var(--beige); color: var(--white); font-weight: 600; }
+
   /* TOOLTIP */
   .tooltip-wrap { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
   .tooltip-icon {
@@ -566,14 +581,20 @@
           <input type="email" id="email" placeholder="seu@email.com">
         </div>
       </div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Data de nascimento da mãe</label>
+          <input type="date" id="data_nasc">
+        </div>
+      </div>
     </div>
 
     <div class="section">
       <div class="section-title">Dados Complementares</div>
       <div class="field-row">
         <div class="field">
-          <label>Data de nascimento</label>
-          <input type="date" id="data_nasc">
+          <label>Data de nascimento da criança</label>
+          <input type="date" id="data_nasc_crianca">
         </div>
         <div class="field">
           <label>Instagram</label>
@@ -664,6 +685,21 @@
         </div>
       </div>
       <!-- Campo valor: normal mostra pacote, parto fica oculto (preenchido na hora) -->
+      <div class="field-row" id="row_tipo_sessao" style="display:none;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Tipo de Sessão</label>
+          <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;">
+            <label style="cursor:pointer;">
+              <input type="radio" name="tipo_sessao" value="Pacote" style="display:none;" onclick="selecionarTipoSessao('Pacote')">
+              <div class="chip-sessao" id="chip_pacote">📦 Pacote</div>
+            </label>
+            <label style="cursor:pointer;">
+              <input type="radio" name="tipo_sessao" value="Individual" style="display:none;" onclick="selecionarTipoSessao('Individual')">
+              <div class="chip-sessao" id="chip_individual">👤 Individual</div>
+            </label>
+          </div>
+        </div>
+      </div>
       <div class="field-row" id="row_pacote">
         <div class="field">
           <label>Pacote / Sessão</label>
@@ -948,6 +984,18 @@
         <div class="clause-title">Direitos de Uso das Imagens</div>
         <div class="clause-text">O(a) cliente declara autorizar (ou não) a utilização das imagens pelo estúdio Jessica Clicando em seu portfólio e redes sociais, conforme indicado na ficha de cadastro.</div>
       </div>
+
+      <div class="clause">
+        <div class="clause-num">Cláusula 5</div>
+        <div class="clause-title">Da Reserva e Remarcação da Data</div>
+        <div class="clause-text">
+          A contratação do ensaio fotográfico implica a reserva de data e horário específicos na agenda da CONTRATADA, ficando esse período indisponível para outros atendimentos. Após a confirmação e o pagamento da reserva ou pagamento total antecipado, a solicitação de alteração pelo CONTRATANTE estará sujeita às condições abaixo:<br><br>
+          <strong>1. Remarcação com antecedência:</strong> O CONTRATANTE poderá solicitar 01 (uma) remarcação sem cobrança de taxa, desde que o pedido seja realizado com antecedência mínima de 7 dias. A nova data deverá ser escolhida dentre os horários disponíveis e deverá ocorrer dentro do prazo de 60 (sessenta) dias contados da data inicialmente contratada.<br><br>
+          <strong>2. Segunda remarcação:</strong> A partir da segunda solicitação de alteração de data, será cobrada uma taxa de R$ 150,00, independentemente do motivo apresentado, salvo situações excepcionais previamente analisadas e autorizadas pela CONTRATADA.<br><br>
+          <strong>3. Remarcação em prazo inferior a 72 horas:</strong> Solicitações realizadas com menos de 72 horas de antecedência serão consideradas alteração de última hora, ficando sujeitas à taxa de remarcação de R$ 150,00.<br><br>
+          Em caso de não comparecimento ao ensaio, atraso que inviabilize a realização da sessão ou desistência no dia do atendimento, o mesmo será considerado realizado ou reagendado com taxa de R$ 200,00.
+        </div>
+      </div>
     </div>
 
     <!-- PAGAMENTO RESUMO -->
@@ -978,12 +1026,6 @@
         <button type="button" onclick="limparAssinatura()" style="position:absolute;top:6px;right:8px;background:none;border:none;font-size:0.7rem;color:var(--gray);cursor:pointer;font-family:'Montserrat',sans-serif;letter-spacing:.05em;">Limpar</button>
       </div>
       <input type="hidden" id="assinatura" value="">
-      <div class="field-row" style="margin-top:12px;">
-        <div class="field">
-          <label>Local e data</label>
-          <input type="text" id="local_data" placeholder="Ex: São Paulo, 25 de fevereiro de 2026">
-        </div>
-      </div>
     </div>
 
     <!-- ACEITE -->
@@ -1157,7 +1199,7 @@
     var dataP   = dataPEl2 ? dataPEl2.value : '';
     var pacoteEl = document.getElementById('pacote');
     var pacote  = pacoteEl ? pacoteEl.value : '';
-    var localD  = document.getElementById('local_data').value;
+    var localDEl2 = document.getElementById('local_data'); var localD = localDEl2 ? localDEl2.value : '';
     var assin   = sigCanvas ? sigCanvas.toDataURL('image/png') : '';
     var aut     = autR.value;
     var isParto = (tipo === 'Parto');
@@ -1245,7 +1287,7 @@
     }
 
     dadosContrato = {
-      mae: mae, crianca: crianca, cpf: cpf, tipo: tipo,
+      mae: mae, crianca: crianca, cpf: cpf, tipo: tipo, dataNascMae: dataNascMae, dataNascCrianca: dataNascCrianca, tipoSessao: tipoSessao,
       dataE: fmtDate(dataE), pacote: pacote, email: email, telefone: telefone,
       assin: assin, localD: localD, aut: aut, dataP: fmtDate(dataP),
       obs: obs, pgtoInfo: pgtoInfo, isParto: isParto, horario: horario,
@@ -1405,6 +1447,11 @@
     document.getElementById('pgto_parcelado').style.display = val === 'Parcelado' ? 'block' : 'none';
   }
 
+  function selecionarTipoSessao(val) {
+    document.getElementById('chip_pacote').classList.toggle('ativo', val === 'Pacote');
+    document.getElementById('chip_individual').classList.toggle('ativo', val === 'Individual');
+  }
+
   function onTipoChange(val) {
     var isParto = (val === 'Parto');
     var rp  = document.getElementById('row_pacote');
@@ -1419,6 +1466,8 @@
     if (pn)  pn.style.display  = isParto ? 'none' : 'block';
     var rmf = document.getElementById('row_momento_familia');
     if (rmf) rmf.style.display = isParto ? 'grid' : 'none';
+    var rts = document.getElementById('row_tipo_sessao');
+    if (rts) rts.style.display = isParto ? 'none' : 'grid';
     var racomp = document.getElementById('row_acompanhante');
     var rmh    = document.getElementById('row_medico_hospital');
     var rvp    = document.getElementById('row_via_parto');
@@ -1486,6 +1535,10 @@
       return;
     }
     var mae      = document.getElementById('nome_mae').value;
+    var dataNascMae = document.getElementById('data_nasc') ? fmtDate(document.getElementById('data_nasc').value) : '';
+    var tsR = document.querySelector('input[name="tipo_sessao"]:checked');
+    var tipoSessao = tsR ? tsR.value : '';
+    var dataNascCrianca = document.getElementById('data_nasc_crianca') ? fmtDate(document.getElementById('data_nasc_crianca').value) : '';
     var crianca  = document.getElementById('nome_crianca').value;
     var cpf      = document.getElementById('cpf').value;
     var tipo     = document.getElementById('tipo_ensaio').value;
@@ -1547,7 +1600,7 @@
     }
 
     dadosContrato = {
-      mae: mae, crianca: crianca, cpf: cpf, tipo: tipo,
+      mae: mae, crianca: crianca, cpf: cpf, tipo: tipo, dataNascMae: dataNascMae, dataNascCrianca: dataNascCrianca, tipoSessao: tipoSessao,
       dataE: fmtDate(dataE), pacote: pacote, email: email, telefone: telefone,
       assin: assin, localD: localD, aut: aut, dataP: fmtDate(dataP),
       obs: obs, pgtoInfo: pgtoInfo, isParto: isParto, horario: horario,
@@ -1745,25 +1798,28 @@
     section('Identificação das Partes');
     row('Fotógrafa:', 'Jéssica Marques Fotografia · CNPJ 27.26.0622/0001-05');
     row('Cliente:', d.mae);
-    if (d.crianca) row('Criança:', d.crianca);
+    if (d.dataNascMae && d.dataNascMae.trim()) row('Data de Nasc. (Mãe):', d.dataNascMae);
+    if (d.crianca && d.crianca.trim()) row('Criança / Bebê:', d.crianca);
+    if (d.dataNascCrianca && d.dataNascCrianca.trim()) row('Data de Nasc. (Criança):', d.dataNascCrianca);
     row('CPF:', d.cpf);
     row('Telefone:', d.telefone);
-    if (d.email) row('E-mail:', d.email);
-    if (d.instagram) row('Instagram:', d.instagram);
-    if (d.endereco) row('Endereço:', [d.endereco, d.bairro].filter(Boolean).join(', '));
+    if (d.email && d.email.trim()) row('E-mail:', d.email);
+    if (d.instagram && d.instagram.trim()) row('Instagram:', d.instagram);
+    if (d.endereco && d.endereco.trim()) row('Endereço:', d.endereco + (d.bairro ? ' — ' + d.bairro : ''));
+    else if (d.bairro && d.bairro.trim()) row('Bairro:', d.bairro);
     y += 2;
 
     section('Especificação do Serviço');
     row('Tipo de Ensaio:', d.tipo);
+    if (!d.isParto && d.tipoSessao && d.tipoSessao.trim()) row('Tipo de Sessão:', d.tipoSessao);
     row('Data do Ensaio:', d.dataE);
-    if (!d.isParto && d.horario && d.horario !== '—') row('Horário:', d.horario);
-    if (d.dataP && d.dataP !== '—') row('Data Prevista:', d.dataP);
-    if (!d.isParto && d.pacote) row('Pacote / Sessão:', d.pacote);
-    if (!d.isParto && d.qtdFotos) row('Qtd. de Fotos:', d.qtdFotos);
-    if (d.isParto && d.acompanhante) row('Acompanhante:', d.acompanhante);
-    if (d.isParto && d.medico) row('Médico(a):', d.medico);
-    if (d.isParto && d.hospital) row('Hospital:', d.hospital);
-    if (d.isParto && d.viaParto) row('Via de Parto:', d.viaParto);
+    if (d.dataP && d.dataP !== '—' && d.dataP.trim()) row('Data Prevista (Parto):', d.dataP);
+    if (!d.isParto && d.pacote && d.pacote.trim()) row('Pacote / Sessão:', d.pacote);
+    if (!d.isParto && d.qtdFotos && d.qtdFotos.trim()) row('Qtd. de Fotos:', d.qtdFotos);
+    if (d.isParto && d.acompanhante && d.acompanhante.trim()) row('Acompanhante:', d.acompanhante);
+    if (d.isParto && d.medico && d.medico.trim()) row('Médico(a):', d.medico);
+    if (d.isParto && d.hospital && d.hospital.trim()) row('Hospital:', d.hospital);
+    if (d.isParto && d.viaParto && d.viaParto.trim()) row('Via de Parto:', d.viaParto);
     if (d.isParto && d.desejaVideo) row('Deseja Vídeo:', d.desejaVideo);
     if (d.isParto && d.momentoFamilia) row('Momento em Família:', d.momentoFamilia);
     row('Autorização de Imagem:', d.aut);
@@ -1859,6 +1915,35 @@
         'Fotos entregues conforme o número contratado, tratadas com padrão Jessica Clicando. Fotos extras podem ser contratadas após o recebimento. Reposição por perda: até 2 meses (após esse prazo, taxa de R$ 100,00).');
       clause('4', 'Direitos de Imagem',
         'As fotografias são de autoria de Jessica Clicando Fotografia. Uso para divulgação conforme autorização indicada neste contrato: ' + d.aut + '.');
+      clause('5', 'Da Reserva e Remarcação da Data',
+        'A contratação implica a reserva de data e horário específicos na agenda da CONTRATADA, ficando esse período indisponível para outros atendimentos. Após confirmação e pagamento da reserva ou pagamento total antecipado, a solicitação de alteração pelo CONTRATANTE estará sujeita às condições abaixo:');
+
+      checkPage();
+      doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(26,26,26);
+      doc.text('1. Remarcação com antecedência:', margin, y); y += 5;
+      doc.setFont('helvetica','normal'); doc.setTextColor(90,90,90);
+      var rem1 = 'O CONTRATANTE poderá solicitar 01 (uma) remarcação sem cobrança de taxa, desde que o pedido seja realizado com antecedência mínima de 7 dias. A nova data deverá ser escolhida dentre os horários disponíveis e ocorrer dentro do prazo de 60 dias contados da data inicialmente contratada.';
+      doc.splitTextToSize(rem1, cw).forEach(function(l){ checkPage(); doc.text(l,margin,y); y+=4.5; });
+      y += 4;
+
+      doc.setFont('helvetica','bold'); doc.setTextColor(26,26,26);
+      doc.text('2. Segunda remarcação:', margin, y); y += 5;
+      doc.setFont('helvetica','normal'); doc.setTextColor(90,90,90);
+      var rem2 = 'A partir da segunda solicitação de alteração de data, será cobrada uma taxa de R$ 150,00, independentemente do motivo apresentado, salvo situações excepcionais previamente analisadas e autorizadas pela CONTRATADA.';
+      doc.splitTextToSize(rem2, cw).forEach(function(l){ checkPage(); doc.text(l,margin,y); y+=4.5; });
+      y += 4;
+
+      doc.setFont('helvetica','bold'); doc.setTextColor(26,26,26);
+      doc.text('3. Remarcação em prazo inferior a 72 horas:', margin, y); y += 5;
+      doc.setFont('helvetica','normal'); doc.setTextColor(90,90,90);
+      var rem3 = 'Solicitações realizadas com menos de 72 horas de antecedência serão consideradas alteração de última hora, ficando sujeitas à taxa de remarcação de R$ 150,00.';
+      doc.splitTextToSize(rem3, cw).forEach(function(l){ checkPage(); doc.text(l,margin,y); y+=4.5; });
+      y += 4;
+
+      doc.setFont('helvetica','normal'); doc.setTextColor(90,90,90);
+      var rem4 = 'Em caso de não comparecimento ao ensaio, atraso que inviabilize a realização da sessão ou desistência no dia do atendimento, o mesmo será considerado realizado ou reagendado com taxa de R$ 200,00.';
+      doc.splitTextToSize(rem4, cw).forEach(function(l){ checkPage(); doc.text(l,margin,y); y+=4.5; });
+      y += 6;
     }
 
     // ── PAGAMENTO ──
